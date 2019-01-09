@@ -4,9 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-/**
- * Created by 1U02UN on 2017/5/17.
- */
+
 
 public class userDBHelper extends SQLiteOpenHelper {
     public userDBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {

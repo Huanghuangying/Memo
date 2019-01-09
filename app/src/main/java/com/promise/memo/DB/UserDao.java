@@ -5,9 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-/**
- * Created by 1U02UN on 2017/5/17.
- */
 
 public class UserDao {
     Context context;

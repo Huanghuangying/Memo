@@ -6,9 +6,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
-/**
- * Created by 1U02UN on 2017/5/21.
- */
 
 public class EditTextClearTools {
     public static void addClearListener(final EditText et , final ImageView iv){

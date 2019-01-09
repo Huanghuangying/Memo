@@ -10,9 +10,6 @@ import com.promise.memo.Bean.NoteBean;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by 1U02UN on 2017/5/17.
- */
 
 public class NoteDao {
     Context context;

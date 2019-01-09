@@ -2,9 +2,6 @@ package com.promise.memo.Bean;
 
 import java.io.Serializable;
 
-/**
- * Created by 1U02UN on 2017/5/17.
- */
 
 public class NoteBean implements Serializable {
 

@@ -20,7 +20,6 @@ import static com.promise.memo.R.id;
 import static com.promise.memo.R.layout;
 
 /**
- * Created by 1U02UN on 2017/5/17.
  * RecyclerView适配器
  */
 
