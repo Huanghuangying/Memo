@@ -8,6 +8,8 @@
 
     <string name="action_settings">Settings</string>
     <string name="title_activity_user_info">修改资料</string>
+    <string name="tv_today_note">今日备忘</string>
+
 
     <!-- Strings related to Settings -->
 
@@ -83,4 +85,13 @@
     <!--Copyright 版权标记符 2017-2018 MUSHINY-->
     <string name="str_copyright"> </string>
     <string name="str_copyright1"> </string>
+    <string-array name="chinese_week_string_array">
+        <item>周日</item>
+        <item>周一</item>
+        <item>周二</item>
+        <item>周三</item>
+        <item>周四</item>
+        <item>周五</item>
+        <item>周六</item>
+    </string-array>
 </resources>

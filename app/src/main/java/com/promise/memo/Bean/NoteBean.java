@@ -14,6 +14,17 @@ public class NoteBean implements Serializable {
     private String updateTime;
     private String remindTime;
     private String owner;
+    private String year;
+    private String month;
+    private String day;
+
+    public String getDay() {
+        return day;
+    }
+
+    public void setDay(String day) {
+        this.day = day;
+    }
 
     public int getId() {
         return id;
@@ -81,5 +92,21 @@ public class NoteBean implements Serializable {
 
     public void setOwner(String owner) {
         this.owner = owner;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public String getMonth() {
+        return month;
+    }
+
+    public void setMonth(String month) {
+        this.month = month;
     }
 }

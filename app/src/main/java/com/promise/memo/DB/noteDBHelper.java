@@ -19,6 +19,9 @@ public class noteDBHelper extends SQLiteOpenHelper {
                 "note_type varchar,"+
                 "note_mark varchar,"+
                 "createTime varchar,"+
+                "year varchar,"+
+                "month varchar,"+
+                "day varchar,"+
                 "updateTime varchar,"+
                 "remindTime varchar,"+
                 "note_owner varchar)";

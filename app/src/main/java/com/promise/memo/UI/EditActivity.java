@@ -41,6 +41,7 @@ public class EditActivity extends AppCompatActivity {
     private Calendar calendar;
     private String login_user;
     private int flag;//区分是新建还是修改
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,9 +68,9 @@ public class EditActivity extends AppCompatActivity {
                                           int month, int day) {
                         // TODO Auto-generated method stub
                         // 更新EditText控件日期 小于10加0
-                        calendar.set(Calendar.YEAR,year);
-                        calendar.set(Calendar.MONTH,month);
-                        calendar.set(Calendar.DAY_OF_MONTH,day);
+                        calendar.set(Calendar.YEAR, year);
+                        calendar.set(Calendar.MONTH, month);
+                        calendar.set(Calendar.DAY_OF_MONTH, day);
 
                     }
                 }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
@@ -97,31 +98,31 @@ public class EditActivity extends AppCompatActivity {
         et_new_title = (EditText) findViewById(R.id.et_new_title);
         et_new_content = (EditText) findViewById(R.id.et_new_content);
         tv_time = (TextView) findViewById(R.id.tv_remindtime);
-        spinner= (Spinner) findViewById(R.id.type_select);
+        spinner = (Spinner) findViewById(R.id.type_select);
 
         Intent intent = getIntent();
         flag = intent.getIntExtra("flag", 0);//0新建，1编辑
-        login_user=intent.getStringExtra("login_user");
+        login_user = intent.getStringExtra("login_user");
 
-        if (flag == 0){//0新建
+        if (flag == 0) {//0新建
             setTitle("新建笔记");
-            myCreate_time=getNowTime();
-            myUpdate_time=getNowTime();
+            myCreate_time = getNowTime();
+            myUpdate_time = getNowTime();
 
-        } else if(flag == 1){//1编辑
+        } else if (flag == 1) {//1编辑
             Bundle bundle = intent.getBundleExtra("data");
             note = (NoteBean) bundle.getSerializable("note");
-            myID=note.getId();
+            myID = note.getId();
             myTitle = note.getTitle();
             myContent = note.getContent();
             myCreate_time = note.getCreateTime();
-            myUpdate_time=note.getUpdateTime();
-            mySelect_time=note.getRemindTime();
-            login_user=note.getOwner();
-            myType=note.getType();
+            myUpdate_time = note.getUpdateTime();
+            mySelect_time = note.getRemindTime();
+            login_user = note.getOwner();
+            myType = note.getType();
             setTitle("编辑笔记");
-            for(int i=0;i<5;i++){
-                if(spinner.getItemAtPosition(i).toString().equals(myType)){
+            for (int i = 0; i < 5; i++) {
+                if (spinner.getItemAtPosition(i).toString().equals(myType)) {
                     spinner.setSelection(i);
                 }
             }
@@ -147,7 +148,7 @@ public class EditActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.action_new_save://保存笔记
                 saveNoteDate();
                 break;
@@ -158,40 +159,43 @@ public class EditActivity extends AppCompatActivity {
     }
 
     private void saveNoteDate() {
-        String noteremindTime=tv_time.getText().toString();
-        if(noteremindTime.equals("点击设置完成时间")){
-            Toast.makeText(EditActivity.this,"请设置备忘事件的完成时间", Toast.LENGTH_SHORT).show();
+        String noteremindTime = tv_time.getText().toString();
+        if (noteremindTime.equals("点击设置完成时间")) {
+            Toast.makeText(EditActivity.this, "请设置备忘事件的完成时间", Toast.LENGTH_SHORT).show();
             return;
         }
         String noteTitle = et_new_title.getText().toString();
-        if(noteTitle.length()>14){
-            Toast.makeText(EditActivity.this,"标题长度应在15字以下", Toast.LENGTH_SHORT).show();
+        if (noteTitle.length() > 14) {
+            Toast.makeText(EditActivity.this, "标题长度应在15字以下", Toast.LENGTH_SHORT).show();
             return;
-        }else if(noteTitle.isEmpty()){
-            Toast.makeText(EditActivity.this,"标题内容不能为空", Toast.LENGTH_SHORT).show();
+        } else if (noteTitle.isEmpty()) {
+            Toast.makeText(EditActivity.this, "标题内容不能为空", Toast.LENGTH_SHORT).show();
             return;
         }
         String noteContent = et_new_content.getText().toString();
-        if(noteContent.isEmpty()){
-            Toast.makeText(EditActivity.this,"内容不能为空", Toast.LENGTH_SHORT).show();
+        if (noteContent.isEmpty()) {
+            Toast.makeText(EditActivity.this, "内容不能为空", Toast.LENGTH_SHORT).show();
             return;
         }
         String notecreateTime = myCreate_time;
         String noteupdateTime = getNowTime();
         int noteID = myID;
-        noteDao=new NoteDao(this);
-        NoteBean note=new NoteBean();
+        noteDao = new NoteDao(this);
+        NoteBean note = new NoteBean();
         note.setTitle(noteTitle);
         note.setContent(noteContent);
         note.setCreateTime(notecreateTime);
         note.setUpdateTime(noteupdateTime);
+        note.setYear(calendar.get(Calendar.YEAR) + "");
+        note.setMonth((calendar.get(Calendar.MONTH) + 1) + "");
+        note.setDay(calendar.get(Calendar.DAY_OF_MONTH) + "");
         note.setMark(0);
         note.setRemindTime(noteremindTime);
         note.setType(spinner.getSelectedItem().toString());
         note.setOwner(login_user);
-        if(flag==0){//新建笔记
+        if (flag == 0) {//新建笔记
             noteDao.insertNote(note);
-        }else if(flag==1){//修改笔记
+        } else if (flag == 1) {//修改笔记
             note.setId(noteID);
             noteDao.updateNote(note);
         }

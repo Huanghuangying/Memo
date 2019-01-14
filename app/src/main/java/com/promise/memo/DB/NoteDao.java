@@ -20,32 +20,36 @@ public class NoteDao {
         dbHelper = new noteDBHelper(context, "note.db", null, 1);
     }
 
-    public void insertNote(NoteBean bean){
+    public void insertNote(NoteBean bean) {
 
-        SQLiteDatabase sqLiteDatabase= dbHelper.getWritableDatabase();
+        SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
-        cv.put("note_tittle",bean.getTitle());
-        cv.put("note_content",bean.getContent());
-        cv.put("note_type",bean.getType());
-        cv.put("note_mark",bean.getMark());
-        cv.put("createTime",bean.getCreateTime());
-        cv.put("updateTime",bean.getUpdateTime());
-        cv.put("remindTime",bean.getRemindTime());
-        cv.put("note_owner",bean.getOwner());
-        sqLiteDatabase.insert("note_data",null,cv);
+        cv.put("note_tittle", bean.getTitle());
+        cv.put("note_content", bean.getContent());
+        cv.put("note_type", bean.getType());
+        cv.put("note_mark", bean.getMark());
+        cv.put("createTime", bean.getCreateTime());
+        cv.put("updateTime", bean.getUpdateTime());
+        cv.put("remindTime", bean.getRemindTime());
+        cv.put("note_owner", bean.getOwner());
+        cv.put("year", bean.getYear());
+        cv.put("month", bean.getMonth());
+        cv.put("day", bean.getDay());
+
+        sqLiteDatabase.insert("note_data", null, cv);
     }
 
-    public int DeleteNote(int id){
-        SQLiteDatabase sqLiteDatabase= dbHelper.getWritableDatabase();
-        int ret=0;
-        ret=sqLiteDatabase.delete("note_data","note_id=?",new String[]{id + ""});
+    public int DeleteNote(int id) {
+        SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
+        int ret = 0;
+        ret = sqLiteDatabase.delete("note_data", "note_id=?", new String[]{id + ""});
         return ret;
     }
 
-    public  Cursor getAllData(String note_owner){
-        SQLiteDatabase sqLiteDatabase= dbHelper.getWritableDatabase();
-        String sql="select * from note_data where note_owner=?";
-        return sqLiteDatabase.rawQuery(sql,new String[]{note_owner});
+    public Cursor getAllData(String note_owner) {
+        SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
+        String sql = "select * from note_data where note_owner=?";
+        return sqLiteDatabase.rawQuery(sql, new String[]{note_owner});
     }
 
     public void updateNote(NoteBean note) {
@@ -57,26 +61,29 @@ public class NoteDao {
         cv.put("note_mark", note.getMark());
         cv.put("updateTime", note.getUpdateTime());
         cv.put("remindTime", note.getRemindTime());
-        db.update("note_data", cv, "note_id=?", new String[]{note.getId()+""});
+        cv.put("year", note.getYear());
+        cv.put("month", note.getMonth());
+        cv.put("day", note.getDay());
+        db.update("note_data", cv, "note_id=?", new String[]{note.getId() + ""});
         db.close();
     }
 
 
-    public List<NoteBean> queryNotesAll(String login_user,int mark) {
+    public List<NoteBean> queryNotesAll(String login_user, int mark) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         List<NoteBean> noteList = new ArrayList<>();
         NoteBean note;
-        String sql ;
+        String sql;
         Cursor cursor = null;
-        if(mark==0){//未完成备忘录
+        if (mark == 0) {//未完成备忘录
             sql = "select * from note_data where note_owner=? and note_mark=0 order by note_id desc";
-        }else if(mark==1){//已完成备忘录
+        } else if (mark == 1) {//已完成备忘录
             sql = "select * from note_data where note_owner=? and note_mark=1 order by note_id desc";
-        }else{//所有备忘录
+        } else {//所有备忘录
             sql = "select * from note_data where note_owner=? order by note_id desc";
         }
-        cursor = db.rawQuery(sql,new String[]{login_user});
+        cursor = db.rawQuery(sql, new String[]{login_user});
         while (cursor.moveToNext()) {
             note = new NoteBean();
             note.setId(cursor.getInt(cursor.getColumnIndex("note_id")));
@@ -84,11 +91,15 @@ public class NoteDao {
             note.setContent(cursor.getString(cursor.getColumnIndex("note_content")));
             note.setType(cursor.getString(cursor.getColumnIndex("note_type")));
             note.setMark(cursor.getInt(cursor.getColumnIndex("note_mark")));
+            note.setYear(cursor.getString(cursor.getColumnIndex("year")));
+            note.setMonth(cursor.getString(cursor.getColumnIndex("month")));
+            note.setDay(cursor.getString(cursor.getColumnIndex("day")));
+
             note.setCreateTime(cursor.getString(cursor.getColumnIndex("createTime")));
             note.setUpdateTime(cursor.getString(cursor.getColumnIndex("updateTime")));
             note.setRemindTime(cursor.getString(cursor.getColumnIndex("remindTime")));
             noteList.add(note);
-            }
+        }
 
         if (cursor != null) {
             cursor.close();
@@ -100,17 +111,99 @@ public class NoteDao {
         return noteList;
     }
 
-    public int countType(String login_user,int mark) {
+    public List<NoteBean> queryNotesAllByDate(String login_user, int mark, String year, String month, String day) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        List<NoteBean> noteList = new ArrayList<>();
+        NoteBean note;
+        String sql;
+        Cursor cursor = null;
+        if (mark == 0) {//未完成备忘录
+            sql = "select * from note_data where note_owner=? and note_mark=0and note_mark=time  order by note_id desc";
+        } else if (mark == 1) {//已完成备忘录
+            sql = "select * from note_data where note_owner=? and note_mark=1and createTime=time  order by note_id desc";
+        } else {//所有备忘录
+            sql = "select * from note_data where note_owner=? and  year='"+year+"' and  month='"+month+"' and  day='"+day+"' order by note_id desc";
+        }
+        cursor = db.rawQuery(sql, new String[]{login_user});
+        while (cursor.moveToNext()) {
+            note = new NoteBean();
+            note.setId(cursor.getInt(cursor.getColumnIndex("note_id")));
+            note.setTitle(cursor.getString(cursor.getColumnIndex("note_tittle")));
+            note.setContent(cursor.getString(cursor.getColumnIndex("note_content")));
+            note.setType(cursor.getString(cursor.getColumnIndex("note_type")));
+            note.setMark(cursor.getInt(cursor.getColumnIndex("note_mark")));
+            note.setCreateTime(cursor.getString(cursor.getColumnIndex("createTime")));
+            note.setUpdateTime(cursor.getString(cursor.getColumnIndex("updateTime")));
+            note.setRemindTime(cursor.getString(cursor.getColumnIndex("remindTime")));
+            note.setYear(cursor.getString(cursor.getColumnIndex("year")));
+            note.setMonth(cursor.getString(cursor.getColumnIndex("month")));
+            note.setDay(cursor.getString(cursor.getColumnIndex("day")));
+            noteList.add(note);
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+        if (db != null) {
+            db.close();
+        }
+
+        return noteList;
+    }
+
+    public List<NoteBean> queryNotesAllByYearAndMonth(String login_user, int mark, String nowYear, String nowMonth) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        List<NoteBean> noteList = new ArrayList<>();
+        NoteBean note;
+        String sql;
+        Cursor cursor = null;
+        if (mark == 0) {//未完成备忘录
+            sql = "select * from note_data where note_owner=? and note_mark=0and year='" + nowYear + "' and month='" + nowMonth + "'  order by note_id desc";
+        } else if (mark == 1) {//已完成备忘录
+            sql = "select * from note_data where note_owner=? and note_mark=1 and year='" + nowYear + "' and month='" + nowMonth + "' order by note_id desc";
+        } else {//所有备忘录
+            sql = "select * from note_data where note_owner=?and year='" + nowYear + "' and month='" + nowMonth + "' order by note_id desc";
+        }
+        cursor = db.rawQuery(sql, new String[]{login_user});
+        while (cursor.moveToNext()) {
+            note = new NoteBean();
+            note.setId(cursor.getInt(cursor.getColumnIndex("note_id")));
+            note.setTitle(cursor.getString(cursor.getColumnIndex("note_tittle")));
+            note.setContent(cursor.getString(cursor.getColumnIndex("note_content")));
+            note.setType(cursor.getString(cursor.getColumnIndex("note_type")));
+            note.setMark(cursor.getInt(cursor.getColumnIndex("note_mark")));
+            note.setCreateTime(cursor.getString(cursor.getColumnIndex("createTime")));
+            note.setUpdateTime(cursor.getString(cursor.getColumnIndex("updateTime")));
+            note.setRemindTime(cursor.getString(cursor.getColumnIndex("remindTime")));
+            note.setYear(cursor.getString(cursor.getColumnIndex("year")));
+            note.setMonth(cursor.getString(cursor.getColumnIndex("month")));
+            note.setDay(cursor.getString(cursor.getColumnIndex("day")));
+
+            noteList.add(note);
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+        if (db != null) {
+            db.close();
+        }
+
+        return noteList;
+    }
+
+    public int countType(String login_user, int mark) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         String sql = "select count(*) from note_data where note_owner=? and note_mark=?";
-        Cursor cursor = db.rawQuery(sql, new String[]{login_user,mark+""});
+        Cursor cursor = db.rawQuery(sql, new String[]{login_user, mark + ""});
         int i = 0;
         while (cursor.moveToNext()) {
             i = cursor.getInt(0);
         }
         return i;
     }
-
 
 
 }

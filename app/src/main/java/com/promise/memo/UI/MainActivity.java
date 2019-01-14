@@ -12,6 +12,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -51,6 +52,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,7 +83,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        nav_selected=2;
+        nav_selected = 2;
         noteDao = new NoteDao(this);
         userDao = new UserDao(this);
 
@@ -89,7 +91,7 @@ public class MainActivity extends AppCompatActivity
         Intent intent = getIntent();
         login_user = intent.getStringExtra("login_user");
         setTitle("备忘录");
-        utv= (TextView) findViewById(R.id.tv_loginuser);
+        utv = (TextView) findViewById(R.id.tv_loginuser);
 
         initData();
         initView();
@@ -97,6 +99,7 @@ public class MainActivity extends AppCompatActivity
         setCount();
 
     }
+
     //获取当前用户头像
     private Drawable getUserDrawable() {
         loadhead = BitmapFactory.decodeFile(path + login_user + "head.jpg");// 从SD卡中找头像，转换成Bitmap
@@ -104,7 +107,7 @@ public class MainActivity extends AppCompatActivity
             @SuppressWarnings("deprecation")
             Drawable drawable = new BitmapDrawable(loadhead);// 转换成drawable
             return drawable;
-        }else{
+        } else {
             return getDrawable(R.mipmap.ic_logo);
         }
     }
@@ -112,9 +115,9 @@ public class MainActivity extends AppCompatActivity
     //设置抽屉菜单是否完成备忘录的数量
     private void setCount() {
         menuNav = navigationView.getMenu();
-        int unfinishNum=noteDao.countType(login_user,0);//未完成备忘录
-        int finishNum=noteDao.countType(login_user,1);//已完成备忘录
-        int allNum = finishNum+unfinishNum;//所有备忘录
+        int unfinishNum = noteDao.countType(login_user, 0);//未完成备忘录
+        int finishNum = noteDao.countType(login_user, 1);//已完成备忘录
+        int allNum = finishNum + unfinishNum;//所有备忘录
         MenuItem nav_all = menuNav.findItem(R.id.nav_all);
         MenuItem nav_finish = menuNav.findItem(R.id.nav_finish);
         MenuItem nav_unfinish = menuNav.findItem(R.id.nav_unfinish);
@@ -123,24 +126,24 @@ public class MainActivity extends AppCompatActivity
         String finish_before = "已完成备忘录";
         String unfinish_before = "未完成备忘录";
 
-        nav_all.setTitle(setSpanTittle(all_before,allNum));
-        nav_finish.setTitle(setSpanTittle(finish_before,finishNum));
-        nav_unfinish.setTitle(setSpanTittle(unfinish_before,unfinishNum));
+        nav_all.setTitle(setSpanTittle(all_before, allNum));
+        nav_finish.setTitle(setSpanTittle(finish_before, finishNum));
+        nav_unfinish.setTitle(setSpanTittle(unfinish_before, unfinishNum));
 
     }
 
     //设置抽屉菜单是否完成备忘录数量的文字样式
-    private SpannableString setSpanTittle(String tittle,int num){
-        String tittle2=tittle+ "      "+num+"  ";
-        SpannableString sColored = new SpannableString( tittle2 );
-        sColored.setSpan(new BackgroundColorSpan( Color.GRAY ), tittle2.length()-(num+"").length()-4, tittle2.length(), 0);
-        sColored.setSpan(new ForegroundColorSpan( Color.WHITE ), tittle2.length()-(num+"").length()-4, tittle2.length(), 0);
+    private SpannableString setSpanTittle(String tittle, int num) {
+        String tittle2 = tittle + "      " + num + "  ";
+        SpannableString sColored = new SpannableString(tittle2);
+        sColored.setSpan(new BackgroundColorSpan(Color.GRAY), tittle2.length() - (num + "").length() - 4, tittle2.length(), 0);
+        sColored.setSpan(new ForegroundColorSpan(Color.WHITE), tittle2.length() - (num + "").length() - 4, tittle2.length(), 0);
         return sColored;
     }
 
     //刷新数据库数据，其实对notelist单一更新即可，不必重新获取，但是偷懒了
-    private void refreshNoteList(int mark){//mark--0=查询未完成，1=查询已完成，>1=查询所有
-        noteList = noteDao.queryNotesAll(login_user,mark);
+    private void refreshNoteList(int mark) {//mark--0=查询未完成，1=查询已完成，>1=查询所有
+        noteList = noteDao.queryNotesAll(login_user, mark);
         mNoteListAdapter.setmNotes(noteList);
         mNoteListAdapter.notifyDataSetChanged();
         setCount();
@@ -148,10 +151,10 @@ public class MainActivity extends AppCompatActivity
 
     //初始化数据库数据
     private void initData() {
-        Cursor cursor=noteDao.getAllData(login_user);
+        Cursor cursor = noteDao.getAllData(login_user);
         noteList = new ArrayList<>();
-        if(cursor!=null){
-            while(cursor.moveToNext()){
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
                 NoteBean bean = new NoteBean();
                 bean.setId(cursor.getInt(cursor.getColumnIndex("note_id")));
                 bean.setTitle(cursor.getString(cursor.getColumnIndex("note_tittle")));
@@ -161,6 +164,10 @@ public class MainActivity extends AppCompatActivity
                 bean.setCreateTime(cursor.getString(cursor.getColumnIndex("createTime")));
                 bean.setUpdateTime(cursor.getString(cursor.getColumnIndex("updateTime")));
                 bean.setOwner(cursor.getString(cursor.getColumnIndex("note_owner")));
+                bean.setYear(cursor.getString(cursor.getColumnIndex("year")));
+                bean.setMonth(cursor.getString(cursor.getColumnIndex("month")));
+                bean.setDay(cursor.getString(cursor.getColumnIndex("day")));
+
                 noteList.add(bean);
             }
         }
@@ -173,13 +180,15 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fabCalender = (FloatingActionButton) findViewById(R.id.fab);
+        fabCalender.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE));
         fab.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE));
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, EditActivity.class);
                 intent.putExtra("flag", 0);
-                intent.putExtra("login_user",login_user);
+                intent.putExtra("login_user", login_user);
                 startActivity(intent);
             }
         });
@@ -195,8 +204,8 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         View headerLayout = navigationView.inflateHeaderView(R.layout.nav_header_main);
-        utv = (TextView)headerLayout.findViewById(R.id.tv_loginuser);
-        iv_user= (CircleImageView) headerLayout.findViewById(R.id.iv_user);
+        utv = (TextView) headerLayout.findViewById(R.id.tv_loginuser);
+        iv_user = (CircleImageView) headerLayout.findViewById(R.id.iv_user);
         utv.setText(login_user);
         iv_user.setImageDrawable(getUserDrawable());
 
@@ -214,7 +223,7 @@ public class MainActivity extends AppCompatActivity
         rv_list_main.setAdapter(mNoteListAdapter);
 
         //RecyclerViewItem单击事件
-        mNoteListAdapter.setOnItemClickListener(new NoteListAdapter.OnRecyclerViewItemClickListener(){
+        mNoteListAdapter.setOnItemClickListener(new NoteListAdapter.OnRecyclerViewItemClickListener() {
 
             @Override
             public void onItemClick(View view, NoteBean note) {
@@ -223,6 +232,15 @@ public class MainActivity extends AppCompatActivity
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("note", note);
                 intent.putExtra("data", bundle);
+                startActivity(intent);
+            }
+        });
+        findViewById(R.id.fab_main_calender).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, CalenderActivity.class);
+                intent.putExtra("notes", (Serializable) noteList);
+                intent.putExtra("login_user",login_user);
                 startActivity(intent);
             }
         });
@@ -236,20 +254,20 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_all) {
-            nav_selected=2;
+            nav_selected = 2;
             refreshNoteList(2);
         } else if (id == R.id.nav_finish) {
-            nav_selected=1;
+            nav_selected = 1;
             refreshNoteList(1);
 
         } else if (id == R.id.nav_unfinish) {
-            nav_selected=0;
+            nav_selected = 0;
             refreshNoteList(0);
 
         } else if (id == R.id.nav_edit_user) {
-            if(login_user.equals("tourist")){
-                Toast.makeText(getApplicationContext(),"游客不能更改用户信息，请注册一个有效账户再进行此操作",Toast.LENGTH_LONG).show();
-            }else{
+            if (login_user.equals("tourist")) {
+                Toast.makeText(getApplicationContext(), "游客不能更改用户信息，请注册一个有效账户再进行此操作", Toast.LENGTH_LONG).show();
+            } else {
                 showUserInfo();
             }
 
@@ -263,7 +281,7 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                    intent.putExtra("code","relogin");
+                    intent.putExtra("code", "relogin");
                     startActivity(intent);
                     finish();
                 }
@@ -296,22 +314,22 @@ public class MainActivity extends AppCompatActivity
 
     //用户信息修改窗口事件
     private void showUserInfo() {
-        head=null;
-        AlertDialog.Builder builder=new AlertDialog.Builder(MainActivity.this);
+        head = null;
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
-        View viewDialog=inflater.inflate(R.layout.user_info_main,null);
-        TextView username= (TextView) viewDialog.findViewById(R.id.tv_username);
-        final EditText oldpwd= (EditText) viewDialog.findViewById(R.id.et_password);
-        final EditText newpwd= (EditText) viewDialog.findViewById(R.id.et_newpassword);
-        final EditText newrepwd=(EditText) viewDialog.findViewById(R.id.et_repassword);
-        Button button= (Button) viewDialog.findViewById(R.id.btn_update);
+        View viewDialog = inflater.inflate(R.layout.user_info_main, null);
+        TextView username = (TextView) viewDialog.findViewById(R.id.tv_username);
+        final EditText oldpwd = (EditText) viewDialog.findViewById(R.id.et_password);
+        final EditText newpwd = (EditText) viewDialog.findViewById(R.id.et_newpassword);
+        final EditText newrepwd = (EditText) viewDialog.findViewById(R.id.et_repassword);
+        Button button = (Button) viewDialog.findViewById(R.id.btn_update);
         ImageView oldpwdClear = (ImageView) viewDialog.findViewById(R.id.iv_pwdClear);
         ImageView newpwdClear = (ImageView) viewDialog.findViewById(R.id.iv_newpwdClear);
         ImageView repwdClear = (ImageView) viewDialog.findViewById(R.id.iv_repwdClear);
         userPic = (CircleImageView) viewDialog.findViewById(R.id.iv_userpic);
-        EditTextClearTools.addClearListener(oldpwd,oldpwdClear);
-        EditTextClearTools.addClearListener(newpwd,newpwdClear);
-        EditTextClearTools.addClearListener(newrepwd,repwdClear);
+        EditTextClearTools.addClearListener(oldpwd, oldpwdClear);
+        EditTextClearTools.addClearListener(newpwd, newpwdClear);
+        EditTextClearTools.addClearListener(newrepwd, repwdClear);
         username.setText(login_user);
         userPic.setImageDrawable(getUserDrawable());
 
@@ -320,31 +338,31 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
 
-                if(oldpwd.getText().toString().isEmpty()){
-                    Toast.makeText(getApplicationContext(),"原密码不能为空",Toast.LENGTH_LONG).show();
+                if (oldpwd.getText().toString().isEmpty()) {
+                    Toast.makeText(getApplicationContext(), "原密码不能为空", Toast.LENGTH_LONG).show();
                     return;
-                }else if(newpwd.getText().toString().isEmpty()){
-                    Toast.makeText(getApplicationContext(),"新密码不能为空",Toast.LENGTH_LONG).show();
+                } else if (newpwd.getText().toString().isEmpty()) {
+                    Toast.makeText(getApplicationContext(), "新密码不能为空", Toast.LENGTH_LONG).show();
                     return;
-                }else if(newrepwd.getText().toString().isEmpty()){
-                    Toast.makeText(getApplicationContext(),"新密码不能为空",Toast.LENGTH_LONG).show();
+                } else if (newrepwd.getText().toString().isEmpty()) {
+                    Toast.makeText(getApplicationContext(), "新密码不能为空", Toast.LENGTH_LONG).show();
                     return;
-                }else if(!newrepwd.getText().toString().equals(newpwd.getText().toString())){
-                    Toast.makeText(getApplicationContext(),"两次密码输入不一致",Toast.LENGTH_LONG).show();
+                } else if (!newrepwd.getText().toString().equals(newpwd.getText().toString())) {
+                    Toast.makeText(getApplicationContext(), "两次密码输入不一致", Toast.LENGTH_LONG).show();
                     return;
-                }else{
+                } else {
                     int i;
-                    i=userDao.updatePw(login_user,oldpwd.getText().toString(),newpwd.getText().toString());
-                    if(i>0){
-                        Toast.makeText(getApplicationContext(),"修改成功！请重新登录！",Toast.LENGTH_LONG).show();
+                    i = userDao.updatePw(login_user, oldpwd.getText().toString(), newpwd.getText().toString());
+                    if (i > 0) {
+                        Toast.makeText(getApplicationContext(), "修改成功！请重新登录！", Toast.LENGTH_LONG).show();
                         savePicToSDCard(head);// 保存在SD卡中
                         iv_user.setImageDrawable(getUserDrawable());
                         Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                        intent.putExtra("code","relogin");
+                        intent.putExtra("code", "relogin");
                         startActivity(intent);
                         finish();
-                    }else{
-                        Toast.makeText(getApplicationContext(),"密码校验失败，请重新输入！",Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "密码校验失败，请重新输入！", Toast.LENGTH_LONG).show();
                     }
 
                 }
@@ -406,7 +424,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onContextItemSelected(MenuItem item){
+    public boolean onContextItemSelected(MenuItem item) {
         int position = -1;
         try {
             position = mNoteListAdapter.getPosition();
@@ -414,8 +432,8 @@ public class MainActivity extends AppCompatActivity
 
             return super.onContextItemSelected(item);
         }
-        switch (item.getItemId()){
-            case Menu.FIRST+1://查看该笔记
+        switch (item.getItemId()) {
+            case Menu.FIRST + 1://查看该笔记
                 Intent intent = new Intent(MainActivity.this, NoteActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("note", noteList.get(position));
@@ -423,7 +441,7 @@ public class MainActivity extends AppCompatActivity
                 startActivity(intent);
                 break;
 
-            case Menu.FIRST+2://编辑该笔记
+            case Menu.FIRST + 2://编辑该笔记
                 Intent intent2 = new Intent(MainActivity.this, EditActivity.class);
                 Bundle bundle2 = new Bundle();
                 bundle2.putSerializable("note", noteList.get(position));
@@ -432,7 +450,7 @@ public class MainActivity extends AppCompatActivity
                 startActivity(intent2);
                 break;
 
-            case Menu.FIRST+3://删除该笔记
+            case Menu.FIRST + 3://删除该笔记
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("提示");
                 builder.setMessage("确定删除笔记？");
@@ -442,8 +460,8 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         int ret = noteDao.DeleteNote(noteList.get(finalPosition).getId());
-                        if (ret > 0){
-                            Toast.makeText(MainActivity.this,"删除成功", Toast.LENGTH_SHORT).show();
+                        if (ret > 0) {
+                            Toast.makeText(MainActivity.this, "删除成功", Toast.LENGTH_SHORT).show();
                             refreshNoteList(nav_selected);
                         }
                     }
@@ -452,30 +470,30 @@ public class MainActivity extends AppCompatActivity
                 builder.create().show();
                 break;
 
-            case Menu.FIRST+4://标记为已完成
-                NoteBean bean=noteList.get(position);
-                if(bean.getMark()==1){
-                    Toast.makeText(MainActivity.this,"它早就被完成了啊", Toast.LENGTH_SHORT).show();
-                }else{
+            case Menu.FIRST + 4://标记为已完成
+                NoteBean bean = noteList.get(position);
+                if (bean.getMark() == 1) {
+                    Toast.makeText(MainActivity.this, "它早就被完成了啊", Toast.LENGTH_SHORT).show();
+                } else {
                     bean.setMark(1);
                     noteDao.updateNote(bean);
                     //noteList.get(position).setMark(1);
                     refreshNoteList(nav_selected);
-                    mNoteListAdapter.notifyItemRangeChanged(position,position);
+                    mNoteListAdapter.notifyItemRangeChanged(position, position);
                 }
                 break;
 
 
-            case Menu.FIRST+5://标记为未完成
-                NoteBean bean2=noteList.get(position);
-                if(bean2.getMark()==0){
-                    Toast.makeText(MainActivity.this,"它本来就没完成啊", Toast.LENGTH_SHORT).show();
-                }else{
+            case Menu.FIRST + 5://标记为未完成
+                NoteBean bean2 = noteList.get(position);
+                if (bean2.getMark() == 0) {
+                    Toast.makeText(MainActivity.this, "它本来就没完成啊", Toast.LENGTH_SHORT).show();
+                } else {
                     bean2.setMark(0);
                     noteDao.updateNote(bean2);
                     //noteList.get(position).setMark(0);
                     refreshNoteList(nav_selected);
-                    mNoteListAdapter.notifyItemRangeChanged(position,position);
+                    mNoteListAdapter.notifyItemRangeChanged(position, position);
                 }
                 break;
         }
@@ -533,7 +551,7 @@ public class MainActivity extends AppCompatActivity
 
     //保存图片到SD卡
     private void savePicToSDCard(Bitmap mBitmap) {
-        if(mBitmap!=null){
+        if (mBitmap != null) {
             String sdStatus = Environment.getExternalStorageState();
             if (!sdStatus.equals(Environment.MEDIA_MOUNTED)) { // 检测sd是否可用
                 return;
@@ -541,7 +559,7 @@ public class MainActivity extends AppCompatActivity
             FileOutputStream b = null;
             File file = new File(path);
             file.mkdirs();// 创建文件夹
-            String fileName = path + login_user+"head.jpg";// 图片名字
+            String fileName = path + login_user + "head.jpg";// 图片名字
             try {
                 b = new FileOutputStream(fileName);
                 mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, b);// 把数据写入文件
@@ -556,22 +574,21 @@ public class MainActivity extends AppCompatActivity
 
                 }
             }
-        }else{
+        } else {
 
         }
 
     }
 
     @Override
-    public void onBackPressed()
-    {
-        if (mBackPressed + TIME_INTERVAL > System.currentTimeMillis())
-        {
+    public void onBackPressed() {
+        if (mBackPressed + TIME_INTERVAL > System.currentTimeMillis()) {
             super.onBackPressed();
             System.exit(0);
             return;
+        } else {
+            Toast.makeText(getBaseContext(), "再按一次返回退出程序", Toast.LENGTH_SHORT).show();
         }
-        else { Toast.makeText(getBaseContext(), "再按一次返回退出程序", Toast.LENGTH_SHORT).show(); }
 
         mBackPressed = System.currentTimeMillis();
     }
